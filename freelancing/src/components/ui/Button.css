@@ -1,0 +1,108 @@
+/* ============ BUTTON — Lumina Design System ============ */
+.ui-btn {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14.5px;
+  font-family: var(--font-body);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), background-position .3s var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  cursor: pointer;
+  line-height: 1;
+}
+.ui-btn:active { transform: scale(.96); }
+.ui-btn:disabled { opacity: .4; pointer-events: none; }
+
+/* PRIMARY — gradient */
+.ui-btn-primary {
+  color: #04070d;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  background-size: 180% 100%;
+  background-position: 0% 0%;
+  box-shadow: 0 0 0 rgba(47,216,238,0);
+}
+.ui-btn-primary:hover {
+  background-position: 100% 0%;
+  box-shadow: 0 8px 30px -8px rgba(47,216,238,.55);
+  transform: translateY(-2px);
+}
+
+/* GHOST */
+.ui-btn-ghost {
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+}
+.ui-btn-ghost:hover {
+  background: rgba(255,255,255,.06);
+  border-color: var(--cyan);
+}
+
+/* OUTLINE */
+.ui-btn-outline {
+  color: var(--cyan);
+  background: transparent;
+  border: 1px solid rgba(47,216,238,.4);
+}
+.ui-btn-outline:hover {
+  background: rgba(47,216,238,.08);
+  transform: translateY(-2px);
+}
+
+/* DANGER */
+.ui-btn-danger {
+  color: #04070d;
+  background: linear-gradient(90deg, #f47b7b, #f062b0);
+  background-size: 180% 100%;
+}
+.ui-btn-danger:hover {
+  background-position: 100% 0%;
+  box-shadow: 0 8px 30px -8px rgba(244,123,123,.5);
+  transform: translateY(-2px);
+}
+
+/* SECONDARY */
+.ui-btn-secondary {
+  color: #04070d;
+  background: linear-gradient(90deg, var(--violet), var(--magenta));
+  background-size: 180% 100%;
+}
+.ui-btn-secondary:hover {
+  background-position: 100% 0%;
+  box-shadow: 0 8px 30px -8px rgba(139,107,245,.5);
+  transform: translateY(-2px);
+}
+
+/* SIZES */
+.ui-btn-sm { padding: 9px 18px; font-size: 13px; border-radius: 999px; }
+.ui-btn-md { padding: 12px 24px; font-size: 14.5px; }
+.ui-btn-lg { padding: 15px 30px; font-size: 16px; }
+
+/* ICON */
+.ui-btn-icon { display: flex; align-items: center; flex-shrink: 0; }
+
+/* LOADING */
+.ui-btn.loading { pointer-events: none; }
+.ui-btn .btn-spinner {
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  border: 2px solid rgba(4,7,13,.3);
+  border-top-color: #04070d;
+  animation: spin .7s linear infinite;
+}
+
+/* RIPPLE */
+.ripple {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,.4);
+  transform: scale(0);
+  animation: ripple .6s ease-out;
+  pointer-events: none;
+}
+@keyframes ripple { to { transform: scale(3); opacity: 0; } }

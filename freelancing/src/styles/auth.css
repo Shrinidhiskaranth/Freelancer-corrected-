@@ -1,0 +1,214 @@
+@import "./base.css";
+
+/* ═══════════════════════════════════════════
+   AUTH SHELL
+   ═══════════════════════════════════════════ */
+.auth-shell {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px 24px;
+  position: relative; z-index: 3;
+}
+
+/* ═══════════════════════════════════════════
+   AUTH CARD — PREMIUM GLASS
+   ═══════════════════════════════════════════ */
+.auth-card {
+  width: 100%; max-width: 620px;
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, rgba(13,17,32,0.95), rgba(8,11,20,0.98));
+  border-radius: var(--r-xl);
+  padding: 48px 44px;
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px rgba(47,216,238,.12),
+    inset 0 1px 0 rgba(255,255,255,.07);
+  animation: fadeUp .5s var(--ease) both;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* Gradient border */
+.auth-card::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(47,216,238,.35),
+    rgba(139,107,245,.2) 40%,
+    rgba(255,255,255,.04) 70%,
+    rgba(240,98,176,.15)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none; z-index: 1;
+  transition: opacity .35s;
+}
+.auth-card:hover::before { opacity: 1.5; }
+
+/* Top cyan sheen */
+.auth-card::after {
+  content: '';
+  position: absolute; top: 0; left: 15%; right: 15%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(47,216,238,.5), transparent);
+  pointer-events: none; z-index: 2;
+}
+
+/* Corner glow */
+.auth-card > .corner-glow {
+  position: absolute; top: -80px; right: -80px;
+  width: 220px; height: 220px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,107,245,.12), transparent 70%);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   TITLES
+   ═══════════════════════════════════════════ */
+.auth-title {
+  text-align: center; font-size: 28px; font-weight: 800;
+  letter-spacing: -.03em; margin-bottom: 8px;
+  font-family: var(--font-display);
+  background: linear-gradient(135deg, #fff 50%, rgba(255,255,255,.6));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.auth-sub {
+  text-align: center; color: var(--text-dim); font-size: 14.5px;
+  margin-bottom: 36px; line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════
+   ROLE CARDS
+   ═══════════════════════════════════════════ */
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+
+.role-card {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md); padding: 22px 20px;
+  cursor: pointer; position: relative;
+  background: rgba(255,255,255,.015);
+  transition: border-color .25s var(--ease), transform .25s var(--ease-b),
+              background .25s, box-shadow .25s;
+  overflow: hidden;
+}
+/* Sweep shimmer on hover */
+.role-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.04) 50%, transparent 60%);
+  background-size: 200% 100%; opacity: 0; transition: opacity .3s;
+}
+.role-card:hover { transform: translateY(-4px); border-color: rgba(47,216,238,.35); }
+.role-card:hover::after { opacity: 1; animation: shimmer 1.5s; }
+
+.role-card.selected {
+  border-color: var(--cyan);
+  background: rgba(47,216,238,.06);
+  box-shadow: 0 0 0 1px rgba(47,216,238,.25), 0 12px 32px -14px rgba(47,216,238,.4);
+  transform: translateY(-2px);
+}
+
+.role-icon { width: 34px; height: 34px; color: var(--text-dim); margin-bottom: 18px; transition: color .25s, transform .3s var(--ease-b); }
+.role-card.selected .role-icon { color: var(--cyan); transform: scale(1.15); }
+.role-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 14px; font-family: var(--font-display); letter-spacing: -.02em; }
+
+.role-check { list-style: none; }
+.role-check li {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-dim); margin-bottom: 8px; line-height: 1.4;
+}
+.role-check li svg { width: 13px; height: 13px; color: var(--ok); flex-shrink: 0; }
+
+.radio-dot {
+  position: absolute; top: 16px; right: 16px;
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid var(--border-strong); transition: border-color .25s;
+}
+.role-card.selected .radio-dot {
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(47,216,238,.4);
+}
+.role-card.selected .radio-dot::after {
+  content: ''; position: absolute; inset: 3px;
+  border-radius: 50%; background: var(--cyan);
+  animation: popIn .25s var(--ease-b);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+/* ═══════════════════════════════════════════
+   FORM FIELDS — FLOATING LABEL
+   ═══════════════════════════════════════════ */
+.field { margin-bottom: 18px; position: relative; }
+.field label {
+  position: absolute; left: 14px; top: -8px;
+  background: linear-gradient(0deg, rgba(13,17,32,1), rgba(8,11,20,1));
+  padding: 0 6px; font-size: 10.5px; color: var(--cyan);
+  font-family: var(--font-mono); letter-spacing: .06em;
+  opacity: 0; transition: opacity .2s var(--ease);
+  pointer-events: none; z-index: 2; text-transform: uppercase;
+}
+.field input {
+  width: 100%; padding: 14px 16px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-strong);
+  background: rgba(255,255,255,.025);
+  color: var(--text); font-size: 14.5px; font-family: var(--font-body);
+  transition: border-color .25s, box-shadow .25s, background .25s;
+  outline: none; margin-bottom: 0;
+}
+.field input::placeholder { color: var(--text-faint); }
+.field input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 4px rgba(47,216,238,.12);
+  background: rgba(255,255,255,.04);
+}
+.field input:focus + label,
+.field.filled label { opacity: 1; }
+
+/* ═══════════════════════════════════════════
+   BANNERS
+   ═══════════════════════════════════════════ */
+.auth-error {
+  background: rgba(244,123,123,.08); border: 1px solid rgba(244,123,123,.3);
+  color: var(--danger); padding: 13px 16px; border-radius: var(--r-sm);
+  font-size: 13.5px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  animation: fadeUp .3s var(--ease);
+}
+.auth-success {
+  background: rgba(62,230,168,.08); border: 1px solid rgba(62,230,168,.3);
+  color: var(--ok); padding: 13px 16px; border-radius: var(--r-sm);
+  font-size: 13.5px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  animation: fadeUp .3s var(--ease);
+}
+
+/* ═══════════════════════════════════════════
+   FOOTER LINKS
+   ═══════════════════════════════════════════ */
+.auth-links {
+  text-align: center; margin-top: 22px; font-size: 14px; color: var(--text-dim);
+}
+.auth-links a {
+  color: var(--cyan); font-weight: 600;
+  position: relative;
+}
+.auth-links a::after {
+  content: ''; position: absolute; left: 0; bottom: -2px;
+  width: 0; height: 1px; background: var(--cyan);
+  transition: width .25s var(--ease);
+}
+.auth-links a:hover::after { width: 100%; }
+.auth-links a:hover { color: #fff; }
+
+.back-link {
+  display: block; text-align: center; margin-top: 16px;
+  font-size: 13px; color: var(--text-faint);
+  transition: color .2s;
+}
+.back-link:hover { color: var(--cyan); }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .auth-card { padding: 32px 22px; border-radius: var(--r-lg); }
+  .role-grid { grid-template-columns: 1fr; }
+}

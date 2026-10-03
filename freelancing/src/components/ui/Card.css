@@ -1,0 +1,21 @@
+/* ============ CARD — Lumina Design System ============ */
+.ui-card {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  transition: border-color .3s var(--ease), transform .3s var(--ease), box-shadow .3s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.ui-card.hover-effect:hover {
+  border-color: rgba(47,216,238,0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px -16px rgba(47,216,238,0.3);
+}
+
+/* Padding variants */
+.ui-card.p-none { padding: 0; }
+.ui-card.p-sm { padding: 16px; }
+.ui-card.p-md { padding: 24px; }
+.ui-card.p-lg { padding: 36px; }

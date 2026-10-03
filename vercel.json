@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/app.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "freelancing/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/backend/app.js"
+    },
+    {
+      "source": "/(static/.*|.*\\..*)",
+      "destination": "/freelancing/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/freelancing/index.html"
+    }
+  ]
+}

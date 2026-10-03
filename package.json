@@ -1,0 +1,26 @@
+{
+  "name": "freelancer-marketplace-platform-main",
+  "version": "1.0.0",
+  "description": "- `backend/` — Express API: JWT auth, bcrypt password hashing, role-based middleware,   Client/Freelancer registration & login, complete-profile endpoints (with file uploads), protected dashboard placeholder routes. - `freelancing/` — your existing React app, extended with: role selection landing page,   separate Client/Freelancer register & login pages, the two big Complete Profile forms, and   template-only dashboards with nav placeholders.",
+  "main": "index.js",
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "@stripe/stripe-js": "^4.1.0",
+    "stripe": "^22.3.2"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "scripts": {
+    "install-all": "npm install && npm install --prefix backend && npm install --prefix freelancing",
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix freelancing\"",
+    "start": "concurrently \"npm start --prefix backend\" \"npm start --prefix freelancing\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

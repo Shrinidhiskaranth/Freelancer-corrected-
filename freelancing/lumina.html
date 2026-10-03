@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina — Proof-based freelance marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --void:#05060b;
+  --surface:#0a0d18;
+  --surface-2:#101526;
+  --surface-3:#161c33;
+  --border:rgba(255,255,255,0.08);
+  --border-strong:rgba(255,255,255,0.16);
+  --cyan:#2fd8ee;
+  --violet:#8b6bf5;
+  --magenta:#f062b0;
+  --text:#eef1fb;
+  --text-dim:#9aa2ba;
+  --text-faint:#5c6480;
+  --ok:#3ee6a8;
+  --radius-lg:22px;
+  --radius-md:14px;
+  --radius-sm:9px;
+  --ease:cubic-bezier(.16,.84,.44,1);
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--void);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  min-height:100vh;
+  position:relative;
+}
+::selection{ background:var(--cyan); color:#04070d; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; }
+h1,h2,h3{ font-family:var(--font-display); letter-spacing:-0.02em; }
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar{ width:10px; }
+::-webkit-scrollbar-track{ background:var(--void); }
+::-webkit-scrollbar-thumb{ background:var(--surface-3); border-radius:10px; border:2px solid var(--void); }
+
+/* ============ BACKGROUND FX ============ */
+#bg-canvas{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+}
+.aurora{
+  position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
+}
+.blob{
+  position:absolute; border-radius:50%; filter:blur(90px); opacity:.5;
+  will-change:transform;
+}
+.blob-1{ width:640px; height:640px; top:-220px; left:-160px; background:radial-gradient(circle, var(--violet), transparent 70%); animation:drift1 16s ease-in-out infinite; }
+.blob-2{ width:560px; height:560px; top:10%; right:-200px; background:radial-gradient(circle, var(--cyan), transparent 70%); animation:drift2 20s ease-in-out infinite; }
+.blob-3{ width:520px; height:520px; bottom:-220px; left:30%; background:radial-gradient(circle, var(--magenta), transparent 70%); animation:drift3 18s ease-in-out infinite; }
+@keyframes drift1{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(80px,60px) scale(1.15);} }
+@keyframes drift2{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-70px,40px) scale(0.9);} }
+@keyframes drift3{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(50px,-50px) scale(1.1);} }
+
+.cursor-glow{
+  position:fixed; width:480px; height:480px; border-radius:50%;
+  background:radial-gradient(circle, rgba(47,216,238,0.16), rgba(139,107,245,0.07) 45%, transparent 68%);
+  pointer-events:none; z-index:5; transform:translate(-50%,-50%);
+  left:50%; top:50%; transition:opacity .3s, left .06s linear, top .06s linear;
+  mix-blend-mode:screen;
+}
+@media (hover:none) and (pointer:coarse){ .cursor-glow{ display:none; } }
+
+/* ============ CUSTOM CURSOR ============ */
+.cursor-dot, .cursor-ring{
+  position:fixed; left:0; top:0; pointer-events:none; z-index:10000;
+  transform:translate(-50%,-50%); opacity:0;
+}
+.cursor-dot{
+  width:7px; height:7px; border-radius:50%;
+  background:var(--cyan); box-shadow:0 0 10px 1px rgba(47,216,238,.7);
+  transition:opacity .25s, background .25s, width .2s, height .2s;
+}
+.cursor-ring{
+  width:34px; height:34px; border-radius:50%;
+  border:1.5px solid rgba(47,216,238,.55);
+  transition:opacity .25s, width .25s var(--ease), height .25s var(--ease), border-color .25s, background .25s, transform .12s var(--ease);
+}
+.cursor-ready .cursor-dot, .cursor-ready .cursor-ring{ opacity:1; }
+.cursor-ring.is-hover{
+  width:58px; height:58px; background:rgba(47,216,238,.08); border-color:var(--cyan);
+}
+.cursor-dot.is-hover{ width:5px; height:5px; background:#fff; }
+.cursor-ring.is-down{ transform:translate(-50%,-50%) scale(.82); }
+.cursor-ready, .cursor-ready a, .cursor-ready button, .cursor-ready input, .cursor-ready .role-card, .cursor-ready .project-card{
+  cursor:none;
+}
+@media (hover:none), (pointer:coarse){
+  .cursor-dot, .cursor-ring{ display:none; }
+}
+
+.grain{
+  position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============ LAYOUT SHELL ============ */
+main{ position:relative; z-index:3; }
+.view{ display:none; opacity:0; }
+.view.active{ display:block; animation:viewIn .55s var(--ease) forwards; }
+@keyframes viewIn{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
+
+.wrap{ max-width:1240px; margin:0 auto; padding:0 32px; }
+
+/* ============ NAV ============ */
+.nav{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 32px;
+  background:rgba(5,6,11,0.65);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+}
+.logo{ display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-0.01em; }
+.logo svg{ width:26px; height:26px; filter:drop-shadow(0 0 10px rgba(47,216,238,.6)); }
+.logo-text{ background:linear-gradient(90deg,#fff, var(--cyan) 60%, var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.nav-links{ display:flex; gap:36px; font-size:14.5px; color:var(--text-dim); }
+.nav-links a{ position:relative; padding:6px 0; transition:color .25s; }
+.nav-links a::after{ content:''; position:absolute; left:0; bottom:0; height:1px; width:0; background:var(--cyan); transition:width .3s var(--ease); }
+.nav-links a:hover{ color:var(--text); }
+.nav-links a:hover::after{ width:100%; }
+.nav-actions{ display:flex; align-items:center; gap:14px; }
+
+/* ============ BUTTONS ============ */
+.btn{
+  position:relative; overflow:hidden; border:none; border-radius:999px;
+  padding:12px 24px; font-weight:600; font-size:14.5px;
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease);
+  display:inline-flex; align-items:center; gap:8px; white-space:nowrap;
+}
+.btn:active{ transform:scale(.96); }
+.btn-primary{
+  color:#04070d;
+  background:linear-gradient(90deg, var(--cyan), var(--violet));
+  background-size:180% 100%;
+  box-shadow:0 0 0 rgba(47,216,238,0);
+}
+.btn-primary:hover{ background-position:100% 0; box-shadow:0 8px 30px -8px rgba(47,216,238,.55); transform:translateY(-2px); }
+.btn-ghost{
+  color:var(--text); background:transparent; border:1px solid var(--border-strong);
+}
+.btn-ghost:hover{ background:rgba(255,255,255,.06); border-color:var(--cyan); }
+.btn-outline{
+  color:var(--cyan); background:transparent; border:1px solid rgba(47,216,238,.4);
+}
+.btn-outline:hover{ background:rgba(47,216,238,.08); transform:translateY(-2px); }
+.btn-block{ width:100%; justify-content:center; padding:14px 24px; font-size:15px; }
+.btn[disabled]{ opacity:.4; pointer-events:none; }
+.btn .spinner{ width:16px; height:16px; border-radius:50%; border:2px solid rgba(4,7,13,.3); border-top-color:#04070d; animation:spin .7s linear infinite; display:none; }
+.btn.loading .spinner{ display:inline-block; }
+.btn.loading .btn-label{ opacity:.5; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+/* ripple */
+.ripple{ position:absolute; border-radius:50%; background:rgba(255,255,255,.5); transform:scale(0); animation:ripple .6s ease-out; pointer-events:none; }
+@keyframes ripple{ to{ transform:scale(3); opacity:0; } }
+
+/* ============ HERO ============ */
+.hero{ padding:88px 0 60px; }
+.hero-grid{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:40px; align-items:center; }
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:var(--font-mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--cyan); border:1px solid rgba(47,216,238,.3); background:rgba(47,216,238,.06);
+  padding:7px 14px; border-radius:999px; margin-bottom:22px;
+  opacity:0; animation:fadeUp .7s var(--ease) forwards; animation-delay:.05s;
+}
+.eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--cyan); box-shadow:0 0 8px var(--cyan); animation:pulseDot 1.6s ease-in-out infinite; }
+@keyframes pulseDot{ 0%,100%{ opacity:1;} 50%{ opacity:.3;} }
+
+.hero h1{
+  font-size:clamp(38px, 5vw, 60px); line-height:1.06; font-weight:700;
+  opacity:0; animation:fadeUp .7s var(--ease) forwards; animation-delay:.15s;
+}
+.hero h1 .grad{ background:linear-gradient(100deg, var(--cyan), var(--violet) 60%, var(--magenta)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.hero p.lead{
+  margin-top:22px; font-size:17.5px; line-height:1.65; color:var(--text-dim); max-width:520px;
+  opacity:0; animation:fadeUp .7s var(--ease) forwards; animation-delay:.28s;
+}
+.hero-cta{ margin-top:34px; display:flex; gap:14px; flex-wrap:wrap;
+  opacity:0; animation:fadeUp .7s var(--ease) forwards; animation-delay:.4s;
+}
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(18px);} to{ opacity:1; transform:translateY(0);} }
+
+/* constellation */
+.constellation-wrap{ position:relative; display:flex; align-items:center; justify-content:center;
+  opacity:0; animation:fadeUp .9s var(--ease) forwards; animation-delay:.3s;
+}
+.constellation-wrap svg{ width:100%; max-width:440px; height:auto; }
+.orbit-ring{ fill:none; stroke:var(--border); stroke-width:1; }
+.link-line{ stroke:url(#lineGrad); stroke-width:1.4; fill:none; stroke-dasharray:6 6; opacity:.55; }
+.node{ filter:drop-shadow(0 0 8px rgba(47,216,238,.5)); }
+.node-ring{ animation:spinSlow 40s linear infinite; transform-origin:200px 200px; }
+.node-ring.rev{ animation-direction:reverse; animation-duration:56s; }
+@keyframes spinSlow{ to{ transform:rotate(360deg); } }
+.core-pulse{ animation:corePulse 3s ease-in-out infinite; transform-origin:200px 200px; }
+@keyframes corePulse{ 0%,100%{ opacity:.5; transform:scale(1);} 50%{ opacity:.9; transform:scale(1.12);} }
+.match-card{
+  position:absolute; bottom:6%; left:2%;
+  background:rgba(10,13,24,.85); backdrop-filter:blur(10px);
+  border:1px solid var(--border-strong); border-radius:var(--radius-md);
+  padding:12px 16px; display:flex; align-items:center; gap:10px;
+  animation:floatY 5s ease-in-out infinite;
+}
+@keyframes floatY{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
+.match-card .star{ color:#ffb648; font-size:16px; }
+.match-card .stat-num{ font-family:var(--font-mono); font-weight:600; font-size:14px; }
+.match-card .stat-sub{ font-size:11px; color:var(--text-faint); }
+
+/* ============ STATS ============ */
+.stats-band{ border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:44px 0; }
+.stats-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; text-align:center; }
+.stat-item .num{ font-family:var(--font-mono); font-size:clamp(28px,3.4vw,38px); font-weight:600;
+  background:linear-gradient(90deg,var(--cyan),var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.stat-item .label{ margin-top:6px; font-size:13.5px; color:var(--text-dim); }
+
+/* ============ FEATURES ============ */
+.section{ padding:100px 0; }
+.section-head{ max-width:600px; margin-bottom:56px; }
+.section-head .kicker{ font-family:var(--font-mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--violet); margin-bottom:12px; display:block; }
+.section-head h2{ font-size:clamp(28px,3.4vw,40px); font-weight:600; }
+.section-head p{ margin-top:14px; color:var(--text-dim); font-size:16px; line-height:1.6; }
+
+.feature-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+.feature-card{
+  background:linear-gradient(180deg, var(--surface-2), var(--surface));
+  border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:30px 26px; transition:transform .3s var(--ease), border-color .3s;
+  opacity:0; transform:translateY(24px);
+}
+.feature-card.in-view{ animation:fadeUp .6s var(--ease) forwards; }
+.feature-card:hover{ border-color:rgba(47,216,238,.4); transform:translateY(-6px); }
+.feature-icon{ width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+.feature-icon svg{ width:22px; height:22px; }
+.fi-1{ background:rgba(47,216,238,.12); color:var(--cyan); }
+.fi-2{ background:rgba(139,107,245,.12); color:var(--violet); }
+.fi-3{ background:rgba(240,98,176,.12); color:var(--magenta); }
+.feature-card h3{ font-size:19px; font-weight:600; margin-bottom:10px; }
+.feature-card p{ color:var(--text-dim); font-size:14.5px; line-height:1.6; }
+
+/* ============ CTA BAND ============ */
+.cta-band{
+  border-radius:28px; padding:64px 40px; text-align:center; position:relative; overflow:hidden;
+  background:radial-gradient(120% 160% at 50% 0%, rgba(139,107,245,.22), transparent 60%), var(--surface-2);
+  border:1px solid var(--border);
+}
+.cta-band h2{ font-size:clamp(26px,3.4vw,38px); font-weight:600; }
+.cta-band p{ color:var(--text-dim); margin-top:12px; font-size:16px; }
+.cta-band .btn{ margin-top:28px; }
+
+/* ============ FOOTER ============ */
+footer{ border-top:1px solid var(--border); padding:64px 0 34px; margin-top:40px; }
+.footer-grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; }
+.footer-brand p{ margin-top:14px; color:var(--text-dim); font-size:14px; max-width:280px; line-height:1.6; }
+.footer-col h4{ font-size:13px; color:var(--text); margin-bottom:16px; letter-spacing:.02em; }
+.footer-col a{ display:block; color:var(--text-dim); font-size:14px; margin-bottom:11px; transition:color .2s; }
+.footer-col a:hover{ color:var(--cyan); }
+.footer-bottom{ text-align:center; margin-top:50px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:13px; }
+
+/* ============ AUTH SCREENS ============ */
+.auth-shell{ min-height:calc(100vh - 74px); display:flex; align-items:center; justify-content:center; padding:60px 24px; }
+.auth-card{
+  width:100%; max-width:620px;
+  background:linear-gradient(180deg, var(--surface-2), var(--surface));
+  border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:44px 40px; position:relative; overflow:hidden;
+}
+.auth-card::before{
+  content:''; position:absolute; top:-60%; left:-20%; width:60%; height:220%;
+  background:radial-gradient(circle, rgba(47,216,238,.10), transparent 70%); pointer-events:none;
+}
+.auth-title{ text-align:center; font-size:26px; font-weight:600; margin-bottom:8px; }
+.auth-sub{ text-align:center; color:var(--text-dim); font-size:14px; margin-bottom:32px; }
+
+.role-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:26px; }
+.role-card{
+  border:1px solid var(--border-strong); border-radius:var(--radius-md); padding:22px 20px;
+  cursor:pointer; transition:border-color .25s, transform .25s, background .25s; position:relative;
+  background:rgba(255,255,255,.015);
+}
+.role-card:hover{ transform:translateY(-3px); border-color:rgba(47,216,238,.4); }
+.role-card.selected{ border-color:var(--cyan); background:rgba(47,216,238,.06); box-shadow:0 0 0 1px rgba(47,216,238,.3), 0 10px 30px -12px rgba(47,216,238,.35); }
+.role-icon{ width:36px; height:36px; color:var(--text-dim); margin-bottom:16px; transition:color .25s; }
+.role-card.selected .role-icon{ color:var(--cyan); }
+.role-card h4{ font-size:16px; font-weight:600; margin-bottom:12px; }
+.role-check{ list-style:none; }
+.role-check li{ display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--text-dim); margin-bottom:8px; }
+.role-check li svg{ width:14px; height:14px; color:var(--ok); flex-shrink:0; }
+.radio-dot{
+  position:absolute; top:18px; right:18px; width:18px; height:18px; border-radius:50%;
+  border:1.5px solid var(--border-strong); transition:border-color .25s;
+}
+.role-card.selected .radio-dot{ border-color:var(--cyan); }
+.role-card.selected .radio-dot::after{
+  content:''; position:absolute; inset:3px; border-radius:50%; background:var(--cyan);
+  animation:popIn .25s var(--ease);
+}
+@keyframes popIn{ from{ transform:scale(0);} to{ transform:scale(1);} }
+
+.field{ margin-bottom:16px; position:relative; }
+.field label{ position:absolute; left:16px; top:-8px; background:var(--surface-2); padding:0 6px; font-size:11px; color:var(--text-faint); font-family:var(--font-mono); opacity:0; transition:opacity .2s; }
+.field input{
+  width:100%; padding:14px 16px; border-radius:var(--radius-sm); border:1px solid var(--border-strong);
+  background:rgba(255,255,255,.02); color:var(--text); font-size:14.5px; font-family:var(--font-body);
+  transition:border-color .25s, box-shadow .25s, background .25s;
+}
+.field input::placeholder{ color:var(--text-faint); }
+.field input:focus{ outline:none; border-color:var(--cyan); box-shadow:0 0 0 4px rgba(47,216,238,.12); background:rgba(255,255,255,.035); }
+.field input:focus + label, .field.filled label{ opacity:1; }
+
+.auth-links{ text-align:center; margin-top:20px; font-size:14px; color:var(--text-dim); }
+.auth-links a{ color:var(--cyan); font-weight:500; }
+.auth-links a:hover{ text-decoration:underline; }
+.back-link{ display:block; text-align:center; margin-top:14px; font-size:13.5px; color:var(--text-faint); }
+.back-link:hover{ color:var(--cyan); }
+
+/* ============ DASHBOARD ============ */
+.dash-shell{ display:grid; grid-template-columns:250px 1fr; min-height:100vh; }
+.sidebar{ border-right:1px solid var(--border); padding:28px 18px; display:flex; flex-direction:column; }
+.side-link{
+  display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px;
+  font-size:14.5px; color:var(--text-dim); margin-bottom:4px; position:relative; transition:color .2s, background .2s;
+}
+.side-link svg{ width:18px; height:18px; }
+.side-link:hover{ background:rgba(255,255,255,.04); color:var(--text); }
+.side-link.active{ color:var(--cyan); background:rgba(47,216,238,.08); }
+.side-link.active::before{ content:''; position:absolute; left:-18px; top:8px; bottom:8px; width:3px; border-radius:3px; background:var(--cyan); box-shadow:0 0 10px var(--cyan); }
+.sidebar-bottom{ margin-top:auto; }
+.side-link.logout{ color:#f47b7b; }
+
+.dash-main{ padding:32px 40px; }
+.dash-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:36px; gap:20px; }
+.dash-search{
+  flex:1; max-width:340px; display:flex; align-items:center; gap:10px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:999px; padding:10px 16px;
+  color:var(--text-faint); font-size:13.5px;
+}
+.dash-search svg{ width:16px; height:16px; }
+.dash-user{ display:flex; align-items:center; gap:12px; }
+.avatar-circle{ width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--cyan),var(--violet)); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-weight:600; font-size:13px; color:#04070d; }
+.bell{ width:20px; height:20px; color:var(--text-dim); position:relative; }
+
+.dash-welcome h1{ font-size:26px; font-weight:600; }
+.dash-welcome p{ color:var(--text-dim); margin-top:8px; font-size:14.5px; }
+.dash-welcome .btn{ margin-top:20px; }
+
+.dash-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:34px; }
+.stat-card{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:22px;
+  transition:border-color .25s, transform .25s;
+}
+.stat-card:hover{ border-color:rgba(47,216,238,.3); transform:translateY(-3px); }
+.stat-card-icon{ width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:18px; }
+.stat-card-icon svg{ width:18px; height:18px; }
+.stat-card .val{ font-family:var(--font-mono); font-size:26px; font-weight:600; }
+.stat-card .lbl{ font-size:13px; color:var(--text-dim); margin-top:4px; }
+
+.dash-panel{ margin-top:34px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:30px; }
+.dash-panel-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.dash-panel-head h3{ font-size:16px; font-weight:600; }
+.dash-panel-head a{ font-size:13.5px; color:var(--cyan); }
+.empty-state{ text-align:center; padding:60px 20px; }
+.empty-icon{
+  width:56px; height:56px; border-radius:50%; background:rgba(47,216,238,.08); border:1px solid rgba(47,216,238,.25);
+  display:flex; align-items:center; justify-content:center; margin:0 auto 20px; animation:breathe 2.6s ease-in-out infinite;
+}
+.empty-icon svg{ width:22px; height:22px; color:var(--cyan); }
+@keyframes breathe{ 0%,100%{ box-shadow:0 0 0 0 rgba(47,216,238,.25);} 50%{ box-shadow:0 0 0 14px rgba(47,216,238,0);} }
+.empty-state h4{ font-size:17px; font-weight:600; margin-bottom:8px; }
+.empty-state p{ color:var(--text-dim); font-size:14px; max-width:340px; margin:0 auto 22px; }
+
+/* ============ CONTENT HEADER (Browse Projects / My Bids / Messages) ============ */
+.content-header{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap;
+  margin-bottom:28px;
+}
+.content-header h1{ font-size:26px; font-weight:600; }
+.content-header p{ color:var(--text-dim); margin-top:8px; font-size:14.5px; }
+.content-search{
+  display:flex; align-items:center; gap:10px; min-width:260px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:999px; padding:11px 16px;
+  transition:border-color .25s, box-shadow .25s;
+}
+.content-search:focus-within{ border-color:var(--cyan); box-shadow:0 0 0 4px rgba(47,216,238,.1); }
+.content-search svg{ width:16px; height:16px; color:var(--text-faint); flex-shrink:0; }
+.content-search input{
+  background:transparent; border:none; outline:none; color:var(--text); font-size:14px; width:100%;
+}
+.content-search input::placeholder{ color:var(--text-faint); }
+
+.project-list{ display:flex; flex-direction:column; gap:16px; }
+.project-card{
+  position:relative; overflow:hidden;
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:26px 28px; display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap;
+  transition:border-color .3s, transform .3s, box-shadow .3s;
+  opacity:0; animation:fadeUp .55s var(--ease) forwards;
+  animation-delay:calc(var(--i, 0) * .09s);
+}
+.project-card::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:linear-gradient(180deg, var(--cyan), var(--violet)); opacity:0; transition:opacity .3s;
+}
+.project-card:hover{ border-color:rgba(47,216,238,.35); transform:translateY(-4px); box-shadow:0 16px 40px -22px rgba(47,216,238,.4); }
+.project-card:hover::before{ opacity:1; }
+.project-info h3{ font-size:18px; font-weight:600; color:var(--cyan); margin-bottom:6px; transition:color .2s; }
+.project-info .client-tag{ font-size:13.5px; color:var(--text-dim); margin-bottom:14px; }
+.project-meta{ display:flex; gap:22px; flex-wrap:wrap; font-size:13.5px; color:var(--text-dim); }
+.project-meta span{ display:inline-flex; align-items:center; gap:6px; }
+.project-meta svg{ width:14px; height:14px; }
+.project-meta .icon-budget{ color:var(--ok); }
+.project-meta .icon-deadline{ color:#f5b95c; }
+.project-meta b{ color:var(--text); font-weight:600; }
+.project-action{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+.project-action .posted{ font-size:12px; color:var(--text-faint); font-family:var(--font-mono); }
+.btn-sm{ padding:10px 20px; font-size:13.5px; }
+
+/* ============ SCROLL REVEAL ============ */
+.reveal{ opacity:0; transform:translateY(24px); transition:opacity .7s var(--ease), transform .7s var(--ease); }
+.reveal.in-view{ opacity:1; transform:translateY(0); }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:980px){
+  .hero-grid{ grid-template-columns:1fr; }
+  .constellation-wrap{ order:-1; max-width:340px; margin:0 auto 20px; }
+  .feature-grid{ grid-template-columns:1fr; }
+  .footer-grid{ grid-template-columns:1fr 1fr; }
+  .dash-shell{ grid-template-columns:1fr; }
+  .sidebar{ display:none; }
+  .dash-stats{ grid-template-columns:1fr 1fr; }
+}
+@media (max-width:720px){
+  .nav-links{ display:none; }
+  .stats-grid{ grid-template-columns:1fr 1fr; }
+  .role-grid{ grid-template-columns:1fr; }
+  .wrap{ padding:0 20px; }
+  .auth-card{ padding:32px 22px; }
+  .dash-main{ padding:24px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001s !important; animation-iteration-count:1 !important; transition-duration:.001s !important; }
+}
+
+:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+.visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="aurora"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="grain"></div>
+
+<nav class="nav">
+  <a href="#" class="logo" data-nav="landing">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14 9.5L21 12L14 14.5L12 22L10 14.5L3 12L10 9.5L12 2Z" fill="url(#navGrad)"/><defs><linearGradient id="navGrad" x1="3" y1="2" x2="21" y2="22"><stop stop-color="#2fd8ee"/><stop offset="1" stop-color="#8b6bf5"/></linearGradient></defs></svg>
+    <span class="logo-text">Lumina</span>
+  </a>
+  <div class="nav-links">
+    <a href="#find-talent" data-scroll="features">Find Talent</a>
+    <a href="#find-work" data-scroll="features">Find Work</a>
+    <a href="#why-us" data-scroll="cta">Why Us</a>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-ghost" data-nav="login">Log In</button>
+    <button class="btn btn-primary" data-nav="role"><span class="btn-label">Sign Up</span></button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ================= LANDING ================= -->
+<section id="view-landing" class="view active">
+  <div class="wrap hero">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>AI matching · live since 2026</span>
+        <h1>The marketplace built on<br><span class="grad">proof, not promises.</span></h1>
+        <p class="lead">Every freelancer on Lumina is identity-verified and skill-tested before their first bid. Clients hire on evidence. Freelancers get judged on their work — not their profile photo.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary" data-nav="role" data-role="client"><span class="btn-label">Start Hiring</span></button>
+          <button class="btn btn-outline" data-nav="role" data-role="freelancer">Find Work →</button>
+        </div>
+      </div>
+      <div class="constellation-wrap">
+        <svg viewBox="0 0 400 400">
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#2fd8ee"/>
+              <stop offset="100%" stop-color="#8b6bf5"/>
+            </linearGradient>
+            <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#2fd8ee"/>
+              <stop offset="100%" stop-color="#8b6bf5" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <circle class="orbit-ring" cx="200" cy="200" r="160"/>
+          <circle class="orbit-ring" cx="200" cy="200" r="105"/>
+          <g id="linkLines"></g>
+          <circle class="core-pulse" cx="200" cy="200" r="46" fill="url(#coreGrad)" opacity="0.5"/>
+          <path d="M200 178L207 197L226 200L207 203L200 222L193 203L174 200L193 197Z" fill="#eef1fb"/>
+          <g class="node-ring" id="ringOuter"></g>
+          <g class="node-ring rev" id="ringInner"></g>
+        </svg>
+        <div class="match-card">
+          <span class="star">★</span>
+          <div>
+            <div class="stat-num">4.9 / 5</div>
+            <div class="stat-sub">avg. rating · 10K+ clients</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-band">
+    <div class="wrap stats-grid">
+      <div class="stat-item"><div class="num" data-count="10000" data-suffix="+">0</div><div class="label">Verified Freelancers</div></div>
+      <div class="stat-item"><div class="num" data-count="5200" data-suffix="+">0</div><div class="label">Projects Shipped</div></div>
+      <div class="stat-item"><div class="num" data-count="150" data-suffix="+">0</div><div class="label">Skill Categories</div></div>
+      <div class="stat-item"><div class="num" data-count="99" data-suffix="%">0</div><div class="label">Client Satisfaction</div></div>
+    </div>
+  </div>
+
+  <div class="wrap section" id="features">
+    <div class="section-head reveal">
+      <span class="kicker">Why Lumina</span>
+      <h2>Trust is engineered in, not bolted on.</h2>
+      <p>Three systems run under every match on Lumina, quietly doing the work that keeps both sides honest.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4M12 3l7 4v5c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V7l7-4z"/></svg></div>
+        <h3>Verified identity & skills</h3>
+        <p>Government ID checks and role-specific assessments happen before a freelancer can send a single bid.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 10h18M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2"/></svg></div>
+        <h3>Escrow-protected payments</h3>
+        <p>Funds are held the moment a contract starts and released on milestones both sides already agreed to.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.8 2.8M16.2 16.2L19 19M19 5l-2.8 2.8M7.8 16.2L5 19"/></svg></div>
+        <h3>Real-time AI matching</h3>
+        <p>New projects are scored against every verified profile the moment they're posted — no waiting for bids to trickle in.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap section" style="padding-top:0" id="cta">
+    <div class="cta-band reveal">
+      <h2>Ready to build something real?</h2>
+      <p>Join the freelancers and companies already shipping work on proof, not promises.</p>
+      <button class="btn btn-primary" data-nav="role"><span class="btn-label">Join Lumina Free</span></button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="logo" data-nav="landing">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14 9.5L21 12L14 14.5L12 22L10 14.5L3 12L10 9.5L12 2Z" fill="url(#navGrad2)"/><defs><linearGradient id="navGrad2" x1="3" y1="2" x2="21" y2="22"><stop stop-color="#2fd8ee"/><stop offset="1" stop-color="#8b6bf5"/></linearGradient></defs></svg>
+            <span class="logo-text">Lumina</span>
+          </a>
+          <p>The verification layer for freelance work. Built for people who'd rather prove it than promise it.</p>
+        </div>
+        <div class="footer-col">
+          <h4>For Clients</h4>
+          <a href="#">How to hire</a>
+          <a href="#">Talent marketplace</a>
+          <a href="#">Project catalog</a>
+        </div>
+        <div class="footer-col">
+          <h4>For Freelancers</h4>
+          <a href="#">How to find work</a>
+          <a href="#" data-nav="role" data-role="freelancer">Create profile</a>
+          <a href="#">Payment protection</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="#">About us</a>
+          <a href="#">Careers</a>
+          <a href="#">Contact support</a>
+        </div>
+      </div>
+      <div class="footer-bottom">© 2026 Lumina. All rights reserved.</div>
+    </div>
+  </footer>
+</section>
+
+<!-- ================= LOGIN ================= -->
+<section id="view-login" class="view">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h2 class="auth-title">Log in to Lumina</h2>
+      <p class="auth-sub">Choose how you use Lumina to continue</p>
+      <div class="role-grid" id="loginRoleGrid">
+        <div class="role-card" data-role="client">
+          <div class="radio-dot"></div>
+          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          <h4>I'm a client, hiring for a project</h4>
+          <ul class="role-check">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Hire verified freelancers</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Secure payments</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Project tracking</li>
+          </ul>
+        </div>
+        <div class="role-card" data-role="freelancer">
+          <div class="radio-dot"></div>
+          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+          <h4>I'm a freelancer, looking for work</h4>
+          <ul class="role-check">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Find high-paying projects</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Build your portfolio</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Secure earnings</li>
+          </ul>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="loginBtn" disabled data-nav="dashboard"><span class="btn-label">Log In</span><span class="spinner"></span></button>
+      <p class="auth-links">Don't have an account? <a href="#" data-nav="role">Sign up</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ROLE SELECT (SIGN UP) ================= -->
+<section id="view-role" class="view">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h2 class="auth-title">Join Lumina</h2>
+      <p class="auth-sub">Tell us which side of the work you're on</p>
+      <div class="role-grid" id="signupRoleGrid">
+        <div class="role-card" data-role="client">
+          <div class="radio-dot"></div>
+          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          <h4>I'm a client, hiring for a project</h4>
+          <ul class="role-check">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Hire verified freelancers</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Secure payments</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Project tracking</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Contract management</li>
+          </ul>
+        </div>
+        <div class="role-card" data-role="freelancer">
+          <div class="radio-dot"></div>
+          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+          <h4>I'm a freelancer, looking for work</h4>
+          <ul class="role-check">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Find high-paying projects</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Build your portfolio</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Secure earnings</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Grow your reputation</li>
+          </ul>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="roleContinueBtn" disabled><span class="btn-label">Create Account</span></button>
+      <p class="auth-links">Already have an account? <a href="#" data-nav="login">Log in</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FREELANCER SIGNUP ================= -->
+<section id="view-signup-freelancer" class="view">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h2 class="auth-title">Freelancer Sign Up</h2>
+      <p class="auth-sub">A few details so clients know who they're hiring</p>
+      <form id="freelancerForm">
+        <div class="field"><input required type="text" placeholder="Full Name" id="fFullName"><label>Full Name</label></div>
+        <div class="field"><input required type="email" placeholder="Email"><label>Email</label></div>
+        <div class="field"><input required type="text" placeholder="Username"><label>Username</label></div>
+        <div class="field"><input required type="text" placeholder="Govt ID / Freelancer ID"><label>Govt ID / Freelancer ID</label></div>
+        <div class="field"><input required type="password" placeholder="Password"><label>Password</label></div>
+        <div class="field"><input required type="password" placeholder="Confirm Password"><label>Confirm Password</label></div>
+        <button type="submit" class="btn btn-primary btn-block"><span class="btn-label">Create Account</span><span class="spinner"></span></button>
+      </form>
+      <p class="auth-links">Already have an account? <a href="#" data-nav="login">Log in</a></p>
+      <a href="#" class="back-link" data-nav="role">← Back to role selection</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CLIENT SIGNUP ================= -->
+<section id="view-signup-client" class="view">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h2 class="auth-title">Client Sign Up</h2>
+      <p class="auth-sub">Set up your company profile to start posting work</p>
+      <form id="clientForm">
+        <div class="field"><input required type="text" placeholder="Full Name" id="cFullName"><label>Full Name</label></div>
+        <div class="field"><input required type="email" placeholder="Email"><label>Email</label></div>
+        <div class="field"><input required type="text" placeholder="Username"><label>Username</label></div>
+        <div class="field"><input required type="text" placeholder="Business Registration No."><label>Business Registration No.</label></div>
+        <div class="field"><input required type="password" placeholder="Password"><label>Password</label></div>
+        <div class="field"><input required type="password" placeholder="Confirm Password"><label>Confirm Password</label></div>
+        <button type="submit" class="btn btn-primary btn-block"><span class="btn-label">Create Account</span><span class="spinner"></span></button>
+      </form>
+      <p class="auth-links">Already have an account? <a href="#" data-nav="login">Log in</a></p>
+      <a href="#" class="back-link" data-nav="role">← Back to role selection</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DASHBOARD ================= -->
+<section id="view-dashboard" class="view">
+  <div class="dash-shell">
+    <aside class="sidebar">
+      <a class="side-link active" href="#" data-nav="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+      <a class="side-link" href="#" data-nav="browse-projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Browse Projects</a>
+      <a class="side-link" href="#" data-nav="my-bids"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>My Bids</a>
+      <a class="side-link" href="#" data-nav="messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+      <div class="sidebar-bottom">
+        <a class="side-link logout" href="#" data-nav="landing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
+      </div>
+    </aside>
+    <div class="dash-main">
+      <div class="dash-top">
+        <div class="dash-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search…</div>
+        <div class="dash-user">
+          <svg class="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <div class="avatar-circle" id="dashAvatar">U</div>
+        </div>
+      </div>
+      <div class="dash-welcome">
+        <h1>Welcome, <span id="dashName">there</span></h1>
+        <p>Find work, manage contracts, and track your earnings.</p>
+        <button class="btn btn-primary" data-nav="browse-projects"><span class="btn-label">Find Work</span></button>
+      </div>
+      <div class="dash-stats">
+        <div class="stat-card">
+          <div class="stat-card-icon" style="background:rgba(47,216,238,.12);color:var(--cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+          <div class="val">0</div><div class="lbl">Active Bids</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon" style="background:rgba(62,230,168,.12);color:var(--ok)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+          <div class="val">₹0</div><div class="lbl">Total Earnings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon" style="background:rgba(139,107,245,.12);color:var(--violet)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.3l-6.2 3.6 1.6-7-5.4-4.7 7.1-.6L12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7z"/></svg></div>
+          <div class="val">0</div><div class="lbl">Active Contracts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon" style="background:rgba(240,98,176,.12);color:var(--magenta)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+          <div class="val">0</div><div class="lbl">Unread Messages</div>
+        </div>
+      </div>
+      <div class="dash-panel">
+        <div class="dash-panel-head"><h3>Recommended Jobs</h3><a href="#">View All</a></div>
+        <div class="empty-state">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+          <h4>Start your journey</h4>
+          <p>Browse the marketplace to find projects matching your skills.</p>
+          <button class="btn btn-outline">Browse Projects →</button>
+        </div>
+      </div>
+    </div>
+  </div></section>
+
+<!-- ================= BROWSE PROJECTS ================= -->
+<section id="view-browse-projects" class="view">
+  <div class="dash-shell">
+    <aside class="sidebar">
+      <a class="side-link" href="#" data-nav="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+      <a class="side-link active" href="#" data-nav="browse-projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Browse Projects</a>
+      <a class="side-link" href="#" data-nav="my-bids"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>My Bids</a>
+      <a class="side-link" href="#" data-nav="messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+      <div class="sidebar-bottom">
+        <a class="side-link logout" href="#" data-nav="landing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
+      </div>
+    </aside>
+    <div class="dash-main">
+      <div class="dash-top">
+        <div class="dash-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search…</div>
+        <div class="dash-user">
+          <svg class="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <div class="avatar-circle" id="dashAvatarBP">U</div>
+        </div>
+      </div>
+      <div class="content-header">
+        <div>
+          <h1>Find Work</h1>
+          <p>Browse open projects and submit winning proposals.</p>
+        </div>
+        <div class="content-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" placeholder="Search projects…">
+        </div>
+      </div>
+      <div class="project-list">
+        <div class="project-card" style="--i:0">
+          <div class="project-info">
+            <h3>E-Commerce Project</h3>
+            <div class="client-tag">Posted by jjdwjng</div>
+            <div class="project-meta">
+              <span class="icon-budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Est. Budget: <b>$3000</b></span>
+              <span class="icon-deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Deadline: <b>12/07/2026</b></span>
+            </div>
+          </div>
+          <div class="project-action">
+            <button class="btn btn-primary btn-sm"><span class="btn-label">Submit Bid →</span></button>
+            <span class="posted">Posted 11/07/2026</span>
+          </div>
+        </div>
+        <div class="project-card" style="--i:1">
+          <div class="project-info">
+            <h3>E-Commerce Website</h3>
+            <div class="client-tag">Posted by An H FHHG</div>
+            <div class="project-meta">
+              <span class="icon-budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Est. Budget: <b>$2500</b></span>
+              <span class="icon-deadline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Deadline: <b>30/07/2026</b></span>
+            </div>
+          </div>
+          <div class="project-action">
+            <button class="btn btn-primary btn-sm"><span class="btn-label">Submit Bid →</span></button>
+            <span class="posted">Posted 07/07/2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MY BIDS ================= -->
+<section id="view-my-bids" class="view">
+  <div class="dash-shell">
+    <aside class="sidebar">
+      <a class="side-link" href="#" data-nav="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+      <a class="side-link" href="#" data-nav="browse-projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Browse Projects</a>
+      <a class="side-link active" href="#" data-nav="my-bids"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>My Bids</a>
+      <a class="side-link" href="#" data-nav="messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+      <div class="sidebar-bottom">
+        <a class="side-link logout" href="#" data-nav="landing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
+      </div>
+    </aside>
+    <div class="dash-main">
+      <div class="dash-top">
+        <div class="dash-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search…</div>
+        <div class="dash-user">
+          <svg class="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <div class="avatar-circle" id="dashAvatarMB">U</div>
+        </div>
+      </div>
+      <div class="content-header">
+        <div>
+          <h1>My Bids</h1>
+          <p>Track every proposal you've sent and its status.</p>
+        </div>
+      </div>
+      <div class="dash-panel">
+        <div class="empty-state">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg></div>
+          <h4>No bids yet</h4>
+          <p>Submit a proposal from Browse Projects and it'll show up here with its status.</p>
+          <button class="btn btn-outline" data-nav="browse-projects">Browse Projects →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MESSAGES ================= -->
+<section id="view-messages" class="view">
+  <div class="dash-shell">
+    <aside class="sidebar">
+      <a class="side-link" href="#" data-nav="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+      <a class="side-link" href="#" data-nav="browse-projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Browse Projects</a>
+      <a class="side-link" href="#" data-nav="my-bids"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>My Bids</a>
+      <a class="side-link active" href="#" data-nav="messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+      <div class="sidebar-bottom">
+        <a class="side-link logout" href="#" data-nav="landing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
+      </div>
+    </aside>
+    <div class="dash-main">
+      <div class="dash-top">
+        <div class="dash-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search…</div>
+        <div class="dash-user">
+          <svg class="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <div class="avatar-circle" id="dashAvatarMS">U</div>
+        </div>
+      </div>
+      <div class="content-header">
+        <div>
+          <h1>Messages</h1>
+          <p>Communicate with clients and discuss project details.</p>
+        </div>
+      </div>
+      <div class="dash-panel">
+        <div class="empty-state">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+          <h4>No messages yet</h4>
+          <p>When you start receiving messages from clients, they'll appear here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ============ STARFIELD CANVAS ============ */
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, stars = [];
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function resize(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+function initStars(){
+  const count = Math.min(110, Math.floor(W/14));
+  stars = Array.from({length:count}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    r: Math.random()*1.4 + 0.3,
+    vx: (Math.random()-0.5)*0.06, vy: (Math.random()-0.5)*0.06,
+    tw: Math.random()*Math.PI*2
+  }));
+}
+resize(); initStars();
+window.addEventListener('resize', () => { resize(); initStars(); });
+
+let mouseX = W/2, mouseY = H/2;
+const isFinePointer = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+window.addEventListener('mousemove', e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  const glow = document.getElementById('cursorGlow');
+  glow.style.left = mouseX + 'px';
+  glow.style.top = mouseY + 'px';
+});
+
+/* ============ CUSTOM CURSOR ============ */
+if(isFinePointer){
+  document.body.classList.add('cursor-ready');
+  const dot = document.getElementById('cursorDot');
+  const ring = document.getElementById('cursorRing');
+  let ringX = mouseX, ringY = mouseY;
+
+  dot.style.opacity = '0';
+  ring.style.opacity = '0';
+  window.addEventListener('mousemove', e => {
+    dot.style.left = e.clientX + 'px';
+    dot.style.top = e.clientY + 'px';
+    dot.style.opacity = '1';
+    ring.style.opacity = '1';
+  }, { once:false });
+
+  function cursorLoop(){
+    const ease = reduceMotion ? 1 : 0.18;
+    ringX += (mouseX - ringX) * ease;
+    ringY += (mouseY - ringY) * ease;
+    ring.style.left = ringX + 'px';
+    ring.style.top = ringY + 'px';
+    requestAnimationFrame(cursorLoop);
+  }
+  cursorLoop();
+
+  const hoverTargets = 'a, button, input, .role-card, .project-card, [data-nav], [data-scroll]';
+  document.addEventListener('mouseover', e => {
+    if(e.target.closest(hoverTargets)){
+      dot.classList.add('is-hover');
+      ring.classList.add('is-hover');
+    }
+  });
+  document.addEventListener('mouseout', e => {
+    if(e.target.closest(hoverTargets)){
+      dot.classList.remove('is-hover');
+      ring.classList.remove('is-hover');
+    }
+  });
+  document.addEventListener('mousedown', () => ring.classList.add('is-down'));
+  document.addEventListener('mouseup', () => ring.classList.remove('is-down'));
+  document.addEventListener('mouseleave', () => { dot.style.opacity='0'; ring.style.opacity='0'; });
+}
+
+function drawStars(){
+  ctx.clearRect(0,0,W,H);
+  const parX = (mouseX - W/2) * 0.008;
+  const parY = (mouseY - H/2) * 0.008;
+  for(let i=0;i<stars.length;i++){
+    const s = stars[i];
+    s.x += s.vx; s.y += s.vy; s.tw += 0.02;
+    if(s.x < 0) s.x = W; if(s.x > W) s.x = 0;
+    if(s.y < 0) s.y = H; if(s.y > H) s.y = 0;
+    const alpha = 0.35 + Math.sin(s.tw)*0.35;
+    ctx.beginPath();
+    ctx.arc(s.x + parX, s.y + parY, s.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(180,220,255,${Math.max(alpha,0.08)})`;
+    ctx.fill();
+  }
+  for(let i=0;i<stars.length;i++){
+    for(let j=i+1;j<stars.length;j++){
+      const a = stars[i], b = stars[j];
+      const dx = a.x-b.x, dy = a.y-b.y;
+      const d = Math.sqrt(dx*dx+dy*dy);
+      if(d < 90){
+        ctx.strokeStyle = `rgba(120,180,220,${(1-d/90)*0.12})`;
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(a.x+parX,a.y+parY); ctx.lineTo(b.x+parX,b.y+parY);
+        ctx.stroke();
+      }
+    }
+  }
+  if(!reduceMotion) requestAnimationFrame(drawStars);
+}
+drawStars();
+
+/* ============ CONSTELLATION NODES ============ */
+(function buildConstellation(){
+  const outer = document.getElementById('ringOuter');
+  const inner = document.getElementById('ringInner');
+  const lines = document.getElementById('linkLines');
+  const cx=200, cy=200;
+  const outerPts = 4, innerPts = 3;
+  const outerR = 160, innerR = 105;
+  let ns = "http://www.w3.org/2000/svg";
+
+  function place(group, count, radius, size){
+    for(let i=0;i<count;i++){
+      const ang = (i/count) * Math.PI*2;
+      const x = cx + Math.cos(ang)*radius;
+      const y = cy + Math.sin(ang)*radius;
+      const c = document.createElementNS(ns,'circle');
+      c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', size);
+      c.setAttribute('fill', i%2===0 ? '#2fd8ee' : '#8b6bf5');
+      c.setAttribute('class','node');
+      group.appendChild(c);
+
+      const line = document.createElementNS(ns,'path');
+      line.setAttribute('d', `M${cx},${cy} L${x},${y}`);
+      line.setAttribute('class','link-line');
+      lines.appendChild(line);
+
+      const pulse = document.createElementNS(ns,'circle');
+      pulse.setAttribute('r','2.4');
+      pulse.setAttribute('fill','#ffffff');
+      pulse.setAttribute('opacity','0.9');
+      const anim = document.createElementNS(ns,'animateMotion');
+      anim.setAttribute('dur', (3+Math.random()*2).toFixed(1)+'s');
+      anim.setAttribute('repeatCount','indefinite');
+      anim.setAttribute('path', `M${x},${y} L${cx},${cy}`);
+      pulse.appendChild(anim);
+      lines.appendChild(pulse);
+    }
+  }
+  place(outer, outerPts, outerR, 6);
+  place(inner, innerPts, innerR, 4.5);
+})();
+
+/* ============ ROUTER ============ */
+const views = document.querySelectorAll('.view');
+const appViews = new Set(['dashboard','browse-projects','my-bids','messages']);
+const globalNav = document.querySelector('.nav');
+function showView(id){
+  views.forEach(v => v.classList.remove('active'));
+  const target = document.getElementById('view-' + id);
+  if(target){ target.classList.add('active'); }
+  globalNav.style.display = appViews.has(id) ? 'none' : 'flex';
+  window.scrollTo({top:0, behavior:'instant' in document.documentElement.style ? 'instant' : 'auto'});
+  location.hash = id;
+}
+document.querySelectorAll('[data-nav]').forEach(el => {
+  el.addEventListener('click', e => {
+    e.preventDefault();
+    const dest = el.getAttribute('data-nav');
+    const presetRole = el.getAttribute('data-role');
+    showView(dest);
+    if(dest === 'role' && presetRole){
+      setTimeout(() => selectRole(document.getElementById('signupRoleGrid'), presetRole), 60);
+    }
+  });
+});
+document.querySelectorAll('[data-scroll]').forEach(el=>{
+  el.addEventListener('click', e=>{
+    e.preventDefault();
+    showView('landing');
+    setTimeout(()=>{
+      const t = document.getElementById(el.getAttribute('data-scroll'));
+      if(t) t.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 80);
+  });
+});
+
+/* ============ ROLE CARD SELECTION ============ */
+function selectRole(grid, role){
+  grid.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  const card = grid.querySelector(`.role-card[data-role="${role}"]`);
+  if(card) card.classList.add('selected');
+  return card;
+}
+document.querySelectorAll('.role-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const grid = card.closest('.role-grid');
+    selectRole(grid, card.getAttribute('data-role'));
+    if(grid.id === 'loginRoleGrid'){
+      document.getElementById('loginBtn').disabled = false;
+    }
+    if(grid.id === 'signupRoleGrid'){
+      document.getElementById('roleContinueBtn').disabled = false;
+    }
+  });
+});
+document.getElementById('roleContinueBtn').addEventListener('click', () => {
+  const selected = document.querySelector('#signupRoleGrid .role-card.selected');
+  if(!selected) return;
+  const role = selected.getAttribute('data-role');
+  showView(role === 'client' ? 'signup-client' : 'signup-freelancer');
+});
+
+/* ============ BUTTON RIPPLE + LOADING ============ */
+document.querySelectorAll('.btn').forEach(btn => {
+  btn.addEventListener('click', function(e){
+    const rect = this.getBoundingClientRect();
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    r.style.left = (e.clientX - rect.left) + 'px';
+    r.style.top = (e.clientY - rect.top) + 'px';
+    this.appendChild(r);
+    setTimeout(()=>r.remove(), 650);
+  });
+});
+
+function simulateSubmit(btn, onDone){
+  btn.classList.add('loading');
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    onDone();
+  }, 900);
+}
+
+document.getElementById('loginBtn').addEventListener('click', function(e){
+  e.preventDefault();
+  const btn = this;
+  simulateSubmit(btn, () => {
+    setDashboardIdentity('there');
+    showView('dashboard');
+  });
+});
+
+document.getElementById('freelancerForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const btn = this.querySelector('button[type="submit"]');
+  const name = document.getElementById('fFullName').value.trim();
+  simulateSubmit(btn, () => {
+    setDashboardIdentity(name);
+    showView('dashboard');
+  });
+});
+
+document.getElementById('clientForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const btn = this.querySelector('button[type="submit"]');
+  const name = document.getElementById('cFullName').value.trim();
+  simulateSubmit(btn, () => {
+    setDashboardIdentity(name);
+    showView('dashboard');
+  });
+});
+
+function setDashboardIdentity(name){
+  const clean = name && name.length ? name.split(' ')[0] : 'there';
+  document.getElementById('dashName').textContent = clean;
+  const initial = clean.charAt(0).toUpperCase();
+  ['dashAvatar','dashAvatarBP','dashAvatarMB','dashAvatarMS'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = initial;
+  });
+}
+
+/* ============ SUBMIT BID INTERACTION ============ */
+document.querySelectorAll('.project-card .btn-primary').forEach(btn => {
+  btn.addEventListener('click', function(e){
+    if(this.classList.contains('submitted')) return;
+    const label = this.querySelector('.btn-label');
+    const original = label.textContent;
+    this.classList.add('loading');
+    setTimeout(() => {
+      this.classList.remove('loading');
+      this.classList.add('submitted');
+      label.textContent = 'Bid Submitted ✓';
+      this.style.background = 'linear-gradient(90deg, #3ee6a8, #2fd8ee)';
+    }, 700);
+  });
+});
+
+/* ============ INPUT FLOATING LABEL STATE ============ */
+document.querySelectorAll('.field input').forEach(input => {
+  input.addEventListener('input', () => {
+    input.closest('.field').classList.toggle('filled', input.value.length > 0);
+  });
+});
+
+/* ============ STAT COUNT-UP ============ */
+const counted = new WeakSet();
+function animateCount(el){
+  if(counted.has(el)) return;
+  counted.add(el);
+  const target = parseInt(el.getAttribute('data-count'), 10);
+  const suffix = el.getAttribute('data-suffix') || '';
+  const dur = 1400;
+  const start = performance.now();
+  function tick(now){
+    const p = Math.min((now-start)/dur, 1);
+    const eased = 1 - Math.pow(1-p, 3);
+    const val = Math.floor(eased * target);
+    el.textContent = val.toLocaleString() + suffix;
+    if(p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ============ SCROLL REVEAL OBSERVER ============ */
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.classList.add('in-view');
+      if(entry.target.hasAttribute('data-count')) animateCount(entry.target);
+    }
+  });
+}, {threshold:0.3});
+document.querySelectorAll('.reveal, .feature-card, .num[data-count]').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

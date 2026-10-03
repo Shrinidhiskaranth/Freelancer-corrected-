@@ -1,0 +1,113 @@
+@import "./base.css";
+
+.profile-page {
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+}
+
+.profile-card {
+    width: 640px;
+    max-width: 100%;
+    background: #ffffff;
+    padding: 36px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.profile-card h1 {
+    color: #1e3c72;
+    margin-bottom: 24px;
+    font-size: 26px;
+}
+
+.profile-card section {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-card section:last-of-type {
+    border-bottom: none;
+}
+
+.profile-card h2 {
+    color: #2a5298;
+    font-size: 17px;
+    margin-bottom: 12px;
+}
+
+.profile-card label {
+    display: block;
+    font-size: 13px;
+    color: #444;
+    margin-bottom: 4px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.checkbox-label input {
+    width: auto;
+    margin: 0;
+}
+
+.agreement {
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.repeatable-block {
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.repeatable-block.inline {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    border: none;
+    padding: 0;
+}
+
+.repeatable-block.inline input,
+.repeatable-block.inline select {
+    margin-bottom: 0;
+}
+
+.add-btn, .remove-btn {
+    border: 1px solid #2a5298;
+    background: transparent;
+    color: #2a5298;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.remove-btn {
+    border-color: #b91c1c;
+    color: #b91c1c;
+}
+
+.profile-card button[type="submit"] {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background-color: #2a5298;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.profile-card button[type="submit"]:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
